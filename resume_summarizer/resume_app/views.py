@@ -98,70 +98,21 @@ class ResumeUploadAPI(APIView):
         # Return the refined summary
         return summary
 
+class JobDescriptionCompareAPI(APIView):
+    def post(self, request, *args, **kwargs):
+        summary = request.data.get('summary')
+        job_description = request.data.get('jobDescription')
 
-#--------------------------------------------------------------------------
+        if not summary or not job_description:
+            return Response({"error": "Both summary and job description are required"}, status=400)
 
-# from django.shortcuts import render
-# from rest_framework.views import APIView
-# from rest_framework.response import Response
-# from rest_framework.parsers import MultiPartParser, FormParser
-# import spacy
-# from docx import Document
-# import PyPDF2
-
-# class ResumeUploadAPI(APIView):
-#     parser_classes = (MultiPartParser, FormParser)
-
-#     # Load the spaCy model once when the class is initialized
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.nlp = spacy.load('en_core_web_sm')
-
-#     def post(self, request, *args, **kwargs):
-#         resume_file = request.FILES.get('file')  # Safely retrieve the file
-
-#         # Check if the file was provided in the request
-#         if not resume_file:
-#             return Response({"error": "No file uploaded"}, status=400)
-
-#         # Extract text from the uploaded resume
-#         try:
-#             text_content = self.extract_text(resume_file)
-#             if not text_content:
-#                 return Response({"error": "Unsupported file format"}, status=400)
-#         except Exception as e:
-#             return Response({"error": f"Error processing file: {str(e)}"}, status=400)
-
-#         # Summarize the extracted text
-#         summary = self.summarize_resume(text_content)
-
-#         return Response({'summary': summary, "message": "File uploaded and summarized successfully!"})
-
-#     # Function to extract text from either .docx or .pdf files
-#     def extract_text(self, resume_file):
-#         # Handle .docx files
-#         if resume_file.name.endswith('.docx'):
-#             try:
-#                 doc = Document(resume_file)
-#                 return '\n'.join([para.text for para in doc.paragraphs])
-#             except Exception as e:
-#                 raise ValueError(f"Error processing .docx file: {str(e)}")
+        # Extract skills from the summary for comparison
+        skills = summary.get("Skills", [])
         
-#         # Handle .pdf files
-#         elif resume_file.name.endswith('.pdf'):
-#             try:
-#                 pdf_reader = PyPDF2.PdfReader(resume_file)
-#                 return '\n'.join([page.extract_text() for page in pdf_reader.pages])
-#             except Exception as e:
-#                 raise ValueError(f"Error processing .pdf file: {str(e)}")
+        # Calculate match percentage based on skills
+        match_count = sum(1 for skill in skills if skill.lower() in job_description.lower())
+        match_percentage = (match_count / len(skills)) * 100 if skills else 0
         
-#         # If the file is neither .docx nor .pdf
-#         else:
-#             raise ValueError("Unsupported file format")
+        match_percentage = round(match_percentage, 2)
 
-#     # Function to summarize the extracted text using spaCy
-#     def summarize_resume(self, text_content):
-#         doc = self.nlp(text_content)
-#         # Implement your NLP-based summarization or keyword extraction logic here
-#         # For now, this is just a placeholder
-#         return "Summarized text (This is a placeholder, implement logic)"
+        return Response({'matchPercentage': match_percentage})

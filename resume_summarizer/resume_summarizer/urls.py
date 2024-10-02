@@ -16,9 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from resume_app.views import ResumeUploadAPI
+from resume_app.views import ResumeUploadAPI, JobDescriptionCompareAPI
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-     path('upload/', ResumeUploadAPI.as_view(), name='resume-upload'),
+    path('upload/', ResumeUploadAPI.as_view(), name='resume-upload'),
+    path('compare/', JobDescriptionCompareAPI.as_view(), name='compare'),
 ]
